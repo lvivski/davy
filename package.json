@@ -1,0 +1,13 @@
+{
+  "name": "troth",
+  "version": "0.0.1",
+  "dependencies": {
+    "subsequent": "*"
+  },
+  "scripts": {
+    "prepublish": "make -B"
+  },
+  "devDependencies": {
+    "uglify-js": "*"
+  }
+}
