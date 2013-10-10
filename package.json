@@ -1,6 +1,6 @@
 {
-  "name": "troth",
-  "version": "0.0.2",
+  "name": "davy",
+  "version": "0.0.1",
   "dependencies": {
     "subsequent": "*"
   },

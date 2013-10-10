@@ -4,6 +4,6 @@ if (typeof define === 'function' && define.amd) {
 	module.exports = Promise
 	var nextTick = require('subsequent')
 } else {
-	global.Troth = global.Promise = Promise
+	global.Davy = global.Promise = Promise
 	var nextTick = global.nextTick
 }

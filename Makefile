@@ -1,13 +1,13 @@
 JS_COMPILER ?= ./node_modules/uglify-js/bin/uglifyjs
 FILES = \
-	src/troth.js \
+	src/davy.js \
 	src/promise.js \
 
 all: \
-	troth.js \
-	troth.min.js
+	davy.js \
+	davy.min.js
 
-troth.js: ${FILES}
+davy.js: ${FILES}
 	@rm -f $@
 	@echo "(function(global){" > $@.tmp
 	@echo "'use strict'" >> $@.tmp
@@ -17,7 +17,7 @@ troth.js: ${FILES}
 	@rm $@.tmp
 	@chmod a-w $@
 
-troth.min.js: troth.js
+davy.min.js: davy.js
 	@rm -f $@
 	@$(JS_COMPILER) $< -c -m -o $@ \
 		--source-map $@.map \
@@ -28,4 +28,4 @@ deps:
 	npm install
 
 clean:
-	rm -f troth*.js*
+	rm -f davy*.js*
