@@ -5,9 +5,11 @@
     "subsequent": "*"
   },
   "scripts": {
+    "test": "promises-aplus-tests test/adapter",
     "prepublish": "make -B"
   },
   "devDependencies": {
-    "uglify-js": "*"
+    "uglify-js": "*",
+    "promises-aplus-tests": "*"
   }
 }
