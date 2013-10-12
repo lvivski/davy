@@ -48,13 +48,14 @@
           return;
         }
       }
-      this.isFulfilled = true;
-      this.complete(value);
     } catch (e) {
       if (!isResolved) {
         this.reject(e);
       }
+      return;
     }
+    this.isFulfilled = true;
+    this.complete(value);
   };
   Promise.prototype.reject = function(error) {
     if (this.isFulfilled || this.isRejected) return;
