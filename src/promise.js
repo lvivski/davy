@@ -23,6 +23,7 @@ Promise.prototype.then = function (onFulfill, onReject) {
 
 Promise.prototype.fulfill = function (value) {
 	if (this.isFulfilled || this.isRejected) return
+	var isResolved = false
 	try {
 		if (value === this) throw new TypeError('Can\'t resolve a promise with itself.')
 		if (isObject(value) || isFunction(value)) {
@@ -30,9 +31,15 @@ Promise.prototype.fulfill = function (value) {
 			    self = this
 			if (isFunction(then)) {
 				then.call(value, function (val) {
-					self.fulfill(val)
+					if (!isResolved) {
+						isResolved = true
+						self.fulfill(val)
+					}
 				}, function (err) {
-					self.reject(err)
+					if (!isResolved) {
+						isResolved = true
+						self.reject(err)
+					}
 				})
 				return
 			}
@@ -40,7 +47,9 @@ Promise.prototype.fulfill = function (value) {
 		this.isFulfilled = true
 		this.complete(value)
 	} catch (e) {
-		this.reject(e)
+		if (!isResolved) {
+			this.reject(e)
+		}
 	}
 }
 
