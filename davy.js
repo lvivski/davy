@@ -61,20 +61,20 @@
     this.deferreds = undefined;
   };
   function resolve(deferred, type, value) {
-    nextTick(function() {
-      var fn = deferred[type], promise = deferred.promise, res;
-      if (isFunction(fn)) {
+    var fn = deferred[type], promise = deferred.promise;
+    if (isFunction(fn)) {
+      nextTick(function() {
         try {
-          res = fn(value);
+          value = fn(value);
         } catch (e) {
           promise.reject(e);
           return;
         }
-        promise.fulfill(res);
-      } else {
-        promise[type](value);
-      }
-    });
+        promise.fulfill(value);
+      });
+    } else {
+      promise[type](value);
+    }
   }
   function defer(promise, fulfill, reject) {
     return {
