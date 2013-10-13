@@ -13,8 +13,6 @@
     this.value = value;
     this.deferreds = [];
   }
-  Promise.SUCCESS = "fulfill";
-  Promise.FAILURE = "reject";
   Promise.prototype.isFulfilled = false;
   Promise.prototype.isRejected = false;
   Promise.prototype.then = function(onFulfill, onReject) {
@@ -48,14 +46,13 @@
           return;
         }
       }
+      this.isFulfilled = true;
+      this.complete(value);
     } catch (e) {
       if (!isResolved) {
         this.reject(e);
       }
-      return;
     }
-    this.isFulfilled = true;
-    this.complete(value);
   };
   Promise.prototype.reject = function(error) {
     if (this.isFulfilled || this.isRejected) return;
@@ -70,17 +67,41 @@
     }
     this.deferreds = undefined;
   };
+  Promise.SUCCESS = "fulfill";
+  Promise.FAILURE = "reject";
+  Promise.all = function() {
+    var args = [].slice.call(arguments.length === 1 && Array.isArray(arguments[0]) ? arguments[0] : arguments), promise = new Promise(), remaining = args.length;
+    for (var i = 0; i < args.length; ++i) {
+      resolve(i, args[i]);
+    }
+    return promise;
+    function reject(err) {
+      promise.reject(err);
+    }
+    function fulfill(val) {
+      resolve(i, val);
+    }
+    function resolve(i, value) {
+      if (isObject(value) && isFunction(value.then)) {
+        value.then(fulfill, reject);
+        return;
+      }
+      args[i] = value;
+      if (--remaining === 0) {
+        promise.fulfill(args);
+      }
+    }
+  };
   function resolve(deferred, type, value) {
     var fn = deferred[type], promise = deferred.promise;
     if (isFunction(fn)) {
       nextTick(function() {
         try {
           value = fn(value);
+          promise.fulfill(value);
         } catch (e) {
           promise.reject(e);
-          return;
         }
-        promise.fulfill(value);
       });
     } else {
       promise[type](value);
