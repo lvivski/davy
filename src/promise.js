@@ -81,9 +81,9 @@ Promise.all = function () {
 	
 	return promise
 	
-  function reject(err) {
+	function reject(err) {
 		promise.reject(err)
- 	}
+	}
 	
 	function fulfill(val) {
 		resolve(i, val)
