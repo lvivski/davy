@@ -1,15 +1,22 @@
 {
-  "name": "davy",
-  "version": "0.0.3",
-  "dependencies": {
-    "subsequent": "*"
-  },
-  "scripts": {
-    "test": "promises-aplus-tests test/adapter",
-    "prepublish": "make -B"
-  },
-  "devDependencies": {
-    "uglify-js": "*",
-    "promises-aplus-tests": "*"
-  }
+	"name": "davy",
+	"description": "Promises/A+ implementation",
+	"version": "0.0.3",
+	"keywords": [
+		"promise",
+		"a+",
+		"then",
+		"async"
+	],
+	"dependencies": {
+		"subsequent": "*"
+	},
+	"scripts": {
+		"test": "promises-aplus-tests test/adapter",
+		"prepublish": "make -B"
+	},
+	"devDependencies": {
+		"uglify-js": "*",
+		"promises-aplus-tests": "*"
+	}
 }
