@@ -1,0 +1,10 @@
+{
+	"name": "davy",
+	"version": "0.0.3",
+	"main": [
+		"davy.js"
+	],
+	"dependencies": {
+		"subsequent": "*"
+	}
+}
