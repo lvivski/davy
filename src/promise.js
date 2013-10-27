@@ -68,39 +68,6 @@ Promise.prototype.complete = function (value) {
 Promise.SUCCESS = 'fulfill'
 Promise.FAILURE = 'reject'
 
-Promise.all = function () {
-	var args = [].slice.call(arguments.length === 1 && Array.isArray(arguments[0]) ?
-	        arguments[0] :
-	        arguments),
-	    promise = new Promise,
-	    remaining = args.length
-	
-	for (var i = 0; i < args.length; ++i) {
-		resolve(i, args[i])
-	}
-	
-	return promise
-	
-	function reject(err) {
-		promise.reject(err)
-	}
-	
-	function fulfill(val) {
-		resolve(i, val)
-	}
-	
-	function resolve(i, value) {
-		if (isObject(value) && isFunction(value.then)) {
-			value.then(fulfill, reject)
-			return
-		}
-		args[i] = value
-		if (--remaining === 0) {
-			promise.fulfill(args)
-		}
-	}
-}
-
 function resolve(deferred, type, value) {
 	var fn = deferred[type],
 	    promise = deferred.promise
@@ -124,12 +91,4 @@ function defer(promise, fulfill, reject) {
 		fulfill: fulfill,
 		reject: reject
 	}
-}
-
-function isObject(obj) {
-	return obj && typeof obj === 'object'
-}
-
-function isFunction(fn) {
-	return fn && typeof fn === 'function'
 }
