@@ -9,6 +9,7 @@ Promise.prototype.isRejected = false
 Promise.prototype.then = function (onFulfill, onReject) {
 	var promise = new Promise,
 	    deferred = defer(promise, onFulfill, onReject)
+
 	if (this.isFulfilled || this.isRejected) {
 		resolve(deferred, this.isFulfilled ? Promise.SUCCESS : Promise.FAILURE, this.value)
 	} else {
