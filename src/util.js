@@ -41,7 +41,7 @@ Promise.all = function () {
 	}
 }
 
-Promise.promisify = function (fn) {
+Promise.wrap = function (fn) {
 	return function () {
 		var args = [].slice.call(arguments),
 		    promise = new Promise
@@ -57,4 +57,12 @@ Promise.promisify = function (fn) {
 
 		return promise
 	}
+}
+
+Promise.prototype.back = function (callback) {
+	return this.then(function (value) {
+		callback(null, value)
+	}, function (error) {
+		callback(error)
+	})
 }

@@ -125,7 +125,7 @@
       }
     }
   };
-  Promise.promisify = function(fn) {
+  Promise.wrap = function(fn) {
     return function() {
       var args = [].slice.call(arguments), promise = new Promise();
       args.push(function(err, val) {
@@ -138,5 +138,12 @@
       fn.apply(this, args);
       return promise;
     };
+  };
+  Promise.prototype.back = function(callback) {
+    return this.then(function(value) {
+      callback(null, value);
+    }, function(error) {
+      callback(error);
+    });
   };
 })(this);
