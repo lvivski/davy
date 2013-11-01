@@ -1,20 +1,20 @@
 (function(global) {
   "use strict";
-  var nextTick;
+  var next;
   if (typeof define === "function" && define.amd) {
     define([ "subsequent" ], function(subsequent) {
-      nextTick = subsequent;
+      next = subsequent;
       return Promise;
     });
   } else if (typeof module === "object" && module.exports) {
     module.exports = Promise;
-    nextTick = require("subsequent");
+    next = require("subsequent");
   } else {
-    global.Davy = global.Promise = Promise;
-    nextTick = global.nextTick;
+    global.Davy = Promise;
+    next = global.subsequent;
   }
-  function Promise(value) {
-    this.value = value;
+  function Promise() {
+    this.value = undefined;
     this.deferreds = [];
   }
   Promise.prototype.isFulfilled = false;
@@ -27,6 +27,16 @@
       this.deferreds.push(deferred);
     }
     return promise;
+  };
+  Promise.prototype.catch = function(onReject) {
+    return this.then(null, onReject);
+  };
+  Promise.prototype.throw = function() {
+    return this.catch(function(error) {
+      next(function() {
+        throw error;
+      });
+    });
   };
   Promise.prototype.fulfill = function(value) {
     if (this.isFulfilled || this.isRejected) return;
@@ -76,7 +86,7 @@
   function resolve(deferred, type, value) {
     var fn = deferred[type], promise = deferred.promise;
     if (isFunction(fn)) {
-      nextTick(function() {
+      next(function() {
         try {
           value = fn(value);
           promise.fulfill(value);
@@ -138,12 +148,5 @@
       fn.apply(this, args);
       return promise;
     };
-  };
-  Promise.prototype.back = function(callback) {
-    return this.then(function(value) {
-      callback(null, value);
-    }, function(error) {
-      callback(error);
-    });
   };
 })(this);

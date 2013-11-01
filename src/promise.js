@@ -1,5 +1,5 @@
-function Promise(value) {
-	this.value = value
+function Promise() {
+	this.value = undefined
 	this.deferreds = []
 }
 
@@ -17,6 +17,18 @@ Promise.prototype.then = function (onFulfill, onReject) {
 	}
 
 	return promise
+}
+
+Promise.prototype.catch = function (onReject) {
+	return this.then(null, onReject)
+}
+
+Promise.prototype.throw = function() {
+	return this.catch(function (error) {
+		next(function () {
+			throw error
+		})
+	})
 }
 
 Promise.prototype.fulfill = function (value) {
@@ -73,7 +85,7 @@ function resolve(deferred, type, value) {
 	var fn = deferred[type],
 	    promise = deferred.promise
 	if (isFunction(fn)) {
-		nextTick(function () {
+		next(function () {
 			try {
 				value = fn(value)
 				promise.fulfill(value)

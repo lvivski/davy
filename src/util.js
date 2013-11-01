@@ -58,11 +58,3 @@ Promise.wrap = function (fn) {
 		return promise
 	}
 }
-
-Promise.prototype.back = function (callback) {
-	return this.then(function (value) {
-		callback(null, value)
-	}, function (error) {
-		callback(error)
-	})
-}

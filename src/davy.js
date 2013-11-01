@@ -1,13 +1,13 @@
-var nextTick
+var next
 if (typeof define === 'function' && define.amd) {
 	define(['subsequent'], function (subsequent) {
-		nextTick = subsequent
+		next = subsequent
 		return Promise
 	})
 } else if (typeof module === 'object' && module.exports) {
 	module.exports = Promise
-	nextTick = require('subsequent')
+	next = require('subsequent')
 } else {
-	global.Davy = global.Promise = Promise
-	nextTick = global.nextTick
+	global.Davy = Promise
+	next = global.subsequent
 }
