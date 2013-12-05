@@ -121,12 +121,11 @@
     function reject(err) {
       promise.reject(err);
     }
-    function fulfill(val) {
-      resolve(i, val);
-    }
     function resolve(i, value) {
       if (isObject(value) && isFunction(value.then)) {
-        value.then(fulfill, reject);
+        value.then(function(val) {
+          resolve(i, val);
+        }, reject);
         return;
       }
       args[i] = value;
