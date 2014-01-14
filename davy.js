@@ -28,11 +28,11 @@
     }
     return promise;
   };
-  Promise.prototype.catch = function(onReject) {
+  Promise.prototype["catch"] = function(onReject) {
     return this.then(null, onReject);
   };
-  Promise.prototype.throw = function() {
-    return this.catch(function(error) {
+  Promise.prototype["throw"] = function() {
+    return this["catch"](function(error) {
       next(function() {
         throw error;
       });
