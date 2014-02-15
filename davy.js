@@ -13,9 +13,12 @@
     global.Davy = Promise;
     next = global.subsequent;
   }
-  function Promise() {
+  function Promise(value) {
     this.value = undefined;
     this.deferreds = [];
+    if (arguments.length > 0) {
+      this.fulfill(value);
+    }
   }
   Promise.prototype.isFulfilled = false;
   Promise.prototype.isRejected = false;
