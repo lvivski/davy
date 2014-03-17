@@ -1,8 +1,25 @@
-function Promise(value) {
+function Promise(resolver) {
 	this.value = undefined
 	this.deferreds = []
+
 	if (arguments.length > 0) {
-		this.fulfill(value)
+		if (typeof resolver == 'function') {
+			var self = this;
+
+			try {
+				resolver(
+					function(val) {
+						self.fulfill(val);
+					},
+					function(err) {
+						self.reject(err);
+					});
+			} catch (e) {
+				self.reject(e);
+			}
+		} else {
+			this.fulfill(resolver);
+		}
 	}
 }
 

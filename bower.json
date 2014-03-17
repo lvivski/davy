@@ -1,6 +1,6 @@
 {
 	"name": "davy",
-	"version": "0.0.8",
+	"version": "0.2.0",
 	"main": [
 		"davy.js"
 	],
