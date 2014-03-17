@@ -39,6 +39,14 @@ Promise.prototype.then = function (onFulfill, onReject) {
 	return promise
 }
 
+Promise.prototype.spread = function(onFulfilled, onRejected) {
+	return this.then(
+		function(val) {
+			return onFulfilled.apply(this, val);
+		},
+		onRejected);
+}
+
 Promise.prototype['catch'] = function (onReject) {
 	return this.then(null, onReject)
 }
