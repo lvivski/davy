@@ -61,12 +61,18 @@
   };
   Promise.prototype.fulfill = function(value) {
     if (this.isFulfilled || this.isRejected) return;
-    var isResolved = false;
-    try {
-      if (value === this) throw new TypeError("Can't resolve a promise with itself.");
-      if (isObject(value) || isFunction(value)) {
-        var then = value.then, self = this;
-        if (isFunction(then)) {
+    if (value === this) throw new TypeError("Can't resolve a promise with itself.");
+    if (isObject(value) || isFunction(value)) {
+      var then;
+      try {
+        then = value.then;
+      } catch (e) {
+        this.reject(e);
+        return;
+      }
+      if (isFunction(then)) {
+        var isResolved = false, self = this;
+        try {
           then.call(value, function(val) {
             if (!isResolved) {
               isResolved = true;
@@ -78,16 +84,16 @@
               self.reject(err);
             }
           });
-          return;
+        } catch (e) {
+          if (!isResolved) {
+            this.reject(e);
+          }
         }
-      }
-      this.isFulfilled = true;
-      this.complete(value);
-    } catch (e) {
-      if (!isResolved) {
-        this.reject(e);
+        return;
       }
     }
+    this.isFulfilled = true;
+    this.complete(value);
   };
   Promise.prototype.reject = function(error) {
     if (this.isFulfilled || this.isRejected) return;
@@ -133,7 +139,7 @@
     return fn && typeof fn === "function";
   }
   function parse(args) {
-    return [].slice.call(args.length === 1 && Array.isArray(args[0]) ? args[0] : args);
+    return args.length === 1 && Array.isArray(args[0]) ? args[0] : [].slice.call(args);
   }
   Promise.each = function(list, iterator) {
     var promise = new Promise(), len = list.length;
@@ -178,15 +184,15 @@
   };
   Promise.wrap = function(fn) {
     return function() {
-      var args = [].slice.call(arguments), promise = new Promise();
-      args.push(function(err, val) {
+      var promise = new Promise();
+      arguments[arguments.length++] = function(err, val) {
         if (err) {
           promise.reject(err);
         } else {
           promise.fulfill(val);
         }
-      });
-      fn.apply(this, args);
+      };
+      fn.apply(this, arguments);
       return promise;
     };
   };

@@ -7,9 +7,9 @@ function isFunction(fn) {
 }
 
 function parse(args) {
-	return [].slice.call(args.length === 1 && Array.isArray(args[0]) ?
+	return args.length === 1 && Array.isArray(args[0]) ?
 		args[0] :
-		args)
+		[].slice.call(args)
 }
 
 Promise.each = function (list, iterator) {
@@ -69,17 +69,16 @@ Promise.race = function () {
 
 Promise.wrap = function (fn) {
 	return function () {
-		var args = [].slice.call(arguments),
-		    promise = new Promise
+		var promise = new Promise
 
-		args.push(function(err, val) {
+		arguments[arguments.length++] = function(err, val) {
 			if (err) {
 				promise.reject(err)
 			} else {
 				promise.fulfill(val)
 			}
-		})
-		fn.apply(this, args)
+		}
+		fn.apply(this, arguments)
 
 		return promise
 	}

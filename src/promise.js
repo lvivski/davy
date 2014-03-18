@@ -7,11 +7,10 @@ function Promise(resolver) {
 			var self = this;
 
 			try {
-				resolver(
-					function(val) {
+				resolver(function (val) {
 						self.fulfill(val);
 					},
-					function(err) {
+					function (err) {
 						self.reject(err);
 					});
 			} catch (e) {
@@ -39,9 +38,9 @@ Promise.prototype.then = function (onFulfill, onReject) {
 	return promise
 }
 
-Promise.prototype.spread = function(onFulfilled, onRejected) {
+Promise.prototype.spread = function (onFulfilled, onRejected) {
 	return this.then(
-		function(val) {
+		function (val) {
 			return onFulfilled.apply(this, val);
 		},
 		onRejected);
@@ -51,7 +50,7 @@ Promise.prototype['catch'] = function (onReject) {
 	return this.then(null, onReject)
 }
 
-Promise.prototype['throw'] = function() {
+Promise.prototype['throw'] = function () {
 	return this['catch'](function (error) {
 		next(function () {
 			throw error
@@ -61,13 +60,19 @@ Promise.prototype['throw'] = function() {
 
 Promise.prototype.fulfill = function (value) {
 	if (this.isFulfilled || this.isRejected) return
-	var isResolved = false
-	try {
-		if (value === this) throw new TypeError('Can\'t resolve a promise with itself.')
-		if (isObject(value) || isFunction(value)) {
-			var then = value.then,
-			    self = this
-			if (isFunction(then)) {
+	if (value === this) throw new TypeError('Can\'t resolve a promise with itself.')
+	if (isObject(value) || isFunction(value)) {
+		var then
+		try {
+			then = value.then
+		} catch(e) {
+			this.reject(e)
+			return
+		}
+		if (isFunction(then)) {
+			var isResolved = false,
+				self = this
+			try {
 				then.call(value, function (val) {
 					if (!isResolved) {
 						isResolved = true
@@ -79,16 +84,16 @@ Promise.prototype.fulfill = function (value) {
 						self.reject(err)
 					}
 				})
-				return
+			} catch (e) {
+				if (!isResolved) {
+					this.reject(e)
+				}
 			}
-		}
-		this.isFulfilled = true
-		this.complete(value)
-	} catch (e) {
-		if (!isResolved) {
-			this.reject(e)
+			return
 		}
 	}
+	this.isFulfilled = true
+	this.complete(value)
 }
 
 Promise.prototype.reject = function (error) {
