@@ -38,26 +38,6 @@ Promise.prototype.then = function (onFulfill, onReject) {
 	return promise
 }
 
-Promise.prototype.spread = function (onFulfilled, onRejected) {
-	return this.then(
-		function (val) {
-			return onFulfilled.apply(this, val);
-		},
-		onRejected);
-}
-
-Promise.prototype['catch'] = function (onReject) {
-	return this.then(null, onReject)
-}
-
-Promise.prototype['throw'] = function () {
-	return this['catch'](function (error) {
-		next(function () {
-			throw error
-		})
-	})
-}
-
 Promise.prototype.fulfill = function (value) {
 	if (this.isFulfilled || this.isRejected) return
 	if (value === this) throw new TypeError('Can\'t resolve a promise with itself.')

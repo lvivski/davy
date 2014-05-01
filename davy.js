@@ -44,21 +44,6 @@
     }
     return promise;
   };
-  Promise.prototype.spread = function(onFulfilled, onRejected) {
-    return this.then(function(val) {
-      return onFulfilled.apply(this, val);
-    }, onRejected);
-  };
-  Promise.prototype["catch"] = function(onReject) {
-    return this.then(null, onReject);
-  };
-  Promise.prototype["throw"] = function() {
-    return this["catch"](function(error) {
-      next(function() {
-        throw error;
-      });
-    });
-  };
   Promise.prototype.fulfill = function(value) {
     if (this.isFulfilled || this.isRejected) return;
     if (value === this) throw new TypeError("Can't resolve a promise with itself.");
@@ -132,15 +117,43 @@
       reject: reject
     };
   }
-  function isObject(obj) {
-    return obj && typeof obj === "object";
-  }
-  function isFunction(fn) {
-    return fn && typeof fn === "function";
-  }
-  function parse(args) {
-    return args.length === 1 && Array.isArray(args[0]) ? args[0] : [].slice.call(args);
-  }
+  Promise.prototype["catch"] = function(onRejected) {
+    return this.then(null, onRejected);
+  };
+  Promise.prototype["throw"] = function() {
+    return this["catch"](function(error) {
+      next(function() {
+        throw error;
+      });
+    });
+  };
+  Promise.prototype["finally"] = function(onResolved) {
+    return this.then(onResolved, onResolved);
+  };
+  Promise.prototype["yield"] = function(value) {
+    return this.then(function() {
+      return value;
+    });
+  };
+  Promise.prototype.tap = function(onFulfilled) {
+    return this.then(onFulfilled)["yield"](this);
+  };
+  Promise.prototype.spread = function(onFulfilled, onRejected) {
+    return this.then(function(val) {
+      return onFulfilled.apply(this, val);
+    }, onRejected);
+  };
+  Promise.resolve = Promise.cast = function(val) {
+    if (isObject(val) && isFunction(val.then)) {
+      return val;
+    }
+    return new Promise(val);
+  };
+  Promise.reject = function(err) {
+    var promise = new Promise();
+    promise.reject(err);
+    return promise;
+  };
   Promise.each = function(list, iterator) {
     var promise = new Promise(), len = list.length;
     if (len === 0) promise.reject(TypeError());
@@ -196,4 +209,13 @@
       return promise;
     };
   };
+  function isObject(obj) {
+    return obj && typeof obj === "object";
+  }
+  function isFunction(fn) {
+    return fn && typeof fn === "function";
+  }
+  function parse(args) {
+    return args.length === 1 && Array.isArray(args[0]) ? args[0] : [].slice.call(args);
+  }
 })(this);
