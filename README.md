@@ -10,7 +10,7 @@ Yet another [Promises/A+](http://promises-aplus.github.com/promises-spec) implem
 ## API
 
 ####`new Davy(resolver)`
-Create a new promise. The passed in function will receive functions resolve and reject as its arguments which can be called to seal the fate of the created promise.
+Create a new promise. The passed in function will receive functions `resolve` and `reject` as its arguments which can be called to seal the fate of the created promise.
 
 ####`.then(onFulfill, onReject)`
 Returns a new promise chained from this promise. The new promise will be rejected or resolved defer on the passed `onFulfill`, `onReject` and the state of this promise.
