@@ -18,10 +18,10 @@ Returns a new promise chained from this promise. The new promise will be rejecte
 ####`.catch(handler)`
 This is a catch-all exception handler, shortcut for calling `.then(null, handler)` on this promise. Any exception happening in a `.then`-chain will propagate to nearest `.catch` handler.
 
-###`.throw(handler)`
+####`.throw(handler)`
 Like `.catch`, but any unhandled rejection that ends up here will be thrown as an error.
 
-###`.finally(handler)`
+####`.finally(handler)`
 Pass a handler that will be called regardless of this promise's fate. Returns a new promise chained from this promise.
 
 ####`.spread(onFulfill, onReject)`
