@@ -40,33 +40,37 @@ Promise.resolve = Promise.cast = function (val) {
 }
 
 Promise.reject = function (err) {
-	var promise = new Promise
-	promise.reject(err)
-	return promise
+	var resolver = new Resolver()
+	resolver.reject(err)
+	return resolve.promise
+}
+
+Promise.defer = function () {
+	return new Resolver(new Promise)
 }
 
 Promise.each = function (list, iterator) {
-	var promise = new Promise,
+	var resolver = Promise.defer(),
 		len = list.length
 
-	if (len === 0) promise.reject(TypeError())
+	if (len === 0) resolver.reject(TypeError())
 
 	for (var i = 0; i < len; ++i) {
 		iterator(list[i], i)
 	}
 
-	return promise
+	return resolver
 }
 
 Promise.all = function () {
 	var list = parse(arguments),
 		length = list.length,
-		promise = Promise.each(list, resolve)
+		resolver = Promise.each(list, resolve)
 
-	return promise
+	return resolver.promise
 
 	function reject(err) {
-		promise.reject(err)
+		resolver.reject(err)
 	}
 
 	function resolve(value, i) {
@@ -76,19 +80,19 @@ Promise.all = function () {
 		}
 		list[i] = value
 		if (--length === 0) {
-			promise.fulfill(list)
+			resolver.fulfill(list)
 		}
 	}
 }
 
 Promise.race = function () {
 	var list = parse(arguments),
-		promise = Promise.each(list, resolve)
+		resolver = Promise.each(list, resolve)
 
-	return promise
+	return resolver.promise
 
 	function reject(err) {
-		promise.reject(err)
+		resolver.reject(err)
 	}
 
 	function resolve(value) {
@@ -96,23 +100,23 @@ Promise.race = function () {
 			value.then(resolve, reject)
 			return
 		}
-		promise.fulfill(value)
+		resolver.fulfill(value)
 	}
 }
 
 Promise.wrap = function (fn) {
 	return function () {
-		var promise = new Promise
+		var resolver = new Resolver(new Promise)
 
 		arguments[arguments.length++] = function(err, val) {
 			if (err) {
-				promise.reject(err)
+				resolver.reject(err)
 			} else {
-				promise.fulfill(val)
+				resolver.fulfill(val)
 			}
 		}
 		fn.apply(this, arguments)
 
-		return promise
+		return resolver.promise
 	}
 }

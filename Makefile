@@ -2,6 +2,7 @@ JS_COMPILER ?= ./node_modules/uglify-js/bin/uglifyjs
 FILES = \
 	src/davy.js \
 	src/promise.js \
+	src/resolver.js \
 	src/extra.js \
 	src/util.js \
 

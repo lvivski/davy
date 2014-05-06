@@ -1,10 +1,10 @@
 var Promise = require('../')
 
 exports.deferred = function () {
-	var p = new Promise
+	var resolver = Promise.defer()
 	return {
-		promise: p,
-		resolve: function (val) { p.fulfill(val) },
-		reject: function (val) { p.reject(val) }
+		promise: resolver.promise,
+		resolve: function (val) { resolver.fulfill(val) },
+		reject: function (err) { resolver.reject(err) }
 	}
 }

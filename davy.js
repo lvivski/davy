@@ -13,40 +13,53 @@
     global.Davy = Promise;
     next = global.subsequent;
   }
-  function Promise(resolver) {
+  function Promise(fn) {
     this.value = undefined;
     this.deferreds = [];
     if (arguments.length > 0) {
-      if (typeof resolver == "function") {
-        var self = this;
+      var resolver = new Resolver(this);
+      if (typeof fn == "function") {
         try {
-          resolver(function(val) {
-            self.fulfill(val);
+          fn(function(val) {
+            resolver.fulfill(val);
           }, function(err) {
-            self.reject(err);
+            resolver.reject(err);
           });
         } catch (e) {
-          self.reject(e);
+          resolver.reject(e);
         }
       } else {
-        this.fulfill(resolver);
+        resolver.fulfill(fn);
       }
     }
   }
   Promise.prototype.isFulfilled = false;
   Promise.prototype.isRejected = false;
   Promise.prototype.then = function(onFulfill, onReject) {
-    var promise = new Promise(), deferred = defer(promise, onFulfill, onReject);
+    var resolver = new Resolver(new Promise()), deferred = defer(resolver, onFulfill, onReject);
     if (this.isFulfilled || this.isRejected) {
       resolve(deferred, this.isFulfilled ? Promise.SUCCESS : Promise.FAILURE, this.value);
     } else {
       this.deferreds.push(deferred);
     }
-    return promise;
+    return resolver.promise;
   };
-  Promise.prototype.fulfill = function(value) {
-    if (this.isFulfilled || this.isRejected) return;
-    if (value === this) throw new TypeError("Can't resolve a promise with itself.");
+  Promise.SUCCESS = "fulfill";
+  Promise.FAILURE = "reject";
+  function defer(resolver, fulfill, reject) {
+    return {
+      resolver: resolver,
+      fulfill: fulfill,
+      reject: reject
+    };
+  }
+  function Resolver(promise) {
+    this.promise = promise;
+  }
+  Resolver.prototype.fulfill = function(value) {
+    var promise = this.promise;
+    if (promise.isFulfilled || promise.isRejected) return;
+    if (value === promise) throw new TypeError("Can't resolve a promise with itself.");
     if (isObject(value) || isFunction(value)) {
       var then;
       try {
@@ -77,45 +90,37 @@
         return;
       }
     }
-    this.isFulfilled = true;
+    promise.isFulfilled = true;
     this.complete(value);
   };
-  Promise.prototype.reject = function(error) {
-    if (this.isFulfilled || this.isRejected) return;
-    this.isRejected = true;
+  Resolver.prototype.reject = function(error) {
+    var promise = this.promise;
+    if (promise.isFulfilled || promise.isRejected) return;
+    promise.isRejected = true;
     this.complete(error);
   };
-  Promise.prototype.complete = function(value) {
-    this.value = value;
-    var type = this.isFulfilled ? Promise.SUCCESS : Promise.FAILURE;
-    for (var i = 0; i < this.deferreds.length; ++i) {
-      resolve(this.deferreds[i], type, value);
+  Resolver.prototype.complete = function(value) {
+    var promise = this.promise, deferreds = promise.deferreds, type = promise.isFulfilled ? Promise.SUCCESS : Promise.FAILURE;
+    promise.value = value;
+    for (var i = 0; i < deferreds.length; ++i) {
+      resolve(deferreds[i], type, value);
     }
-    this.deferreds = undefined;
+    promise.deferreds = undefined;
   };
-  Promise.SUCCESS = "fulfill";
-  Promise.FAILURE = "reject";
   function resolve(deferred, type, value) {
-    var fn = deferred[type], promise = deferred.promise;
+    var fn = deferred[type], resolver = deferred.resolver;
     if (isFunction(fn)) {
       next(function() {
         try {
           value = fn(value);
-          promise.fulfill(value);
+          resolver.fulfill(value);
         } catch (e) {
-          promise.reject(e);
+          resolver.reject(e);
         }
       });
     } else {
-      promise[type](value);
+      resolver[type](value);
     }
-  }
-  function defer(promise, fulfill, reject) {
-    return {
-      promise: promise,
-      fulfill: fulfill,
-      reject: reject
-    };
   }
   Promise.prototype["catch"] = function(onRejected) {
     return this.then(null, onRejected);
@@ -150,23 +155,26 @@
     return new Promise(val);
   };
   Promise.reject = function(err) {
-    var promise = new Promise();
-    promise.reject(err);
-    return promise;
+    var resolver = new Resolver();
+    resolver.reject(err);
+    return resolve.promise;
+  };
+  Promise.defer = function() {
+    return new Resolver(new Promise());
   };
   Promise.each = function(list, iterator) {
-    var promise = new Promise(), len = list.length;
-    if (len === 0) promise.reject(TypeError());
+    var resolver = Promise.defer(), len = list.length;
+    if (len === 0) resolver.reject(TypeError());
     for (var i = 0; i < len; ++i) {
       iterator(list[i], i);
     }
-    return promise;
+    return resolver;
   };
   Promise.all = function() {
-    var list = parse(arguments), length = list.length, promise = Promise.each(list, resolve);
-    return promise;
+    var list = parse(arguments), length = list.length, resolver = Promise.each(list, resolve);
+    return resolver.promise;
     function reject(err) {
-      promise.reject(err);
+      resolver.reject(err);
     }
     function resolve(value, i) {
       if (isObject(value) && isFunction(value.then)) {
@@ -177,36 +185,36 @@
       }
       list[i] = value;
       if (--length === 0) {
-        promise.fulfill(list);
+        resolver.fulfill(list);
       }
     }
   };
   Promise.race = function() {
-    var list = parse(arguments), promise = Promise.each(list, resolve);
-    return promise;
+    var list = parse(arguments), resolver = Promise.each(list, resolve);
+    return resolver.promise;
     function reject(err) {
-      promise.reject(err);
+      resolver.reject(err);
     }
     function resolve(value) {
       if (isObject(value) && isFunction(value.then)) {
         value.then(resolve, reject);
         return;
       }
-      promise.fulfill(value);
+      resolver.fulfill(value);
     }
   };
   Promise.wrap = function(fn) {
     return function() {
-      var promise = new Promise();
+      var resolver = new Resolver(new Promise());
       arguments[arguments.length++] = function(err, val) {
         if (err) {
-          promise.reject(err);
+          resolver.reject(err);
         } else {
-          promise.fulfill(val);
+          resolver.fulfill(val);
         }
       };
       fn.apply(this, arguments);
-      return promise;
+      return resolver.promise;
     };
   };
   function isObject(obj) {
