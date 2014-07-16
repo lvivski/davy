@@ -50,14 +50,14 @@ Resolver.prototype.reject = function (error) {
 
 Resolver.prototype.complete = function (value) {
 	var promise = this.promise,
-		deferreds = promise.deferreds,
+		deferreds = promise.__deferreds,
 		type = promise.isFulfilled ? Promise.SUCCESS : Promise.FAILURE
 
 	promise.value = value
 	for (var i = 0; i < deferreds.length; ++i) {
 		resolve(deferreds[i], type, value)
 	}
-	promise.deferreds = undefined
+	promise.__deferreds = undefined
 }
 
 function resolve(deferred, type, value) {

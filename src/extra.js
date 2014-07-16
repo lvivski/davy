@@ -40,7 +40,7 @@ Promise.resolve = Promise.cast = function (val) {
 }
 
 Promise.reject = function (err) {
-	var resolver = new Resolver()
+	var resolver = Promise.defer()
 	resolver.reject(err)
 	return resolve.promise
 }
@@ -73,9 +73,15 @@ Promise.all = function () {
 		resolver.reject(err)
 	}
 
+	function _resolve(i) {
+		return function (value) {
+			resolve(value, i)
+		}
+	}
+
 	function resolve(value, i) {
 		if (isObject(value) && isFunction(value.then)) {
-			value.then(function (val) { resolve(val, i) }, reject)
+			value.then(_resolve(i), reject)
 			return
 		}
 		list[i] = value

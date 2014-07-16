@@ -1,6 +1,6 @@
 function Promise(fn) {
 	this.value = undefined
-	this.deferreds = []
+	this.__deferreds = []
 
 	if (arguments.length > 0) {
 		var resolver = new Resolver(this)
@@ -31,7 +31,7 @@ Promise.prototype.then = function (onFulfill, onReject) {
 	if (this.isFulfilled || this.isRejected) {
 		resolve(deferred, this.isFulfilled ? Promise.SUCCESS : Promise.FAILURE, this.value)
 	} else {
-		this.deferreds.push(deferred)
+		this.__deferreds.push(deferred)
 	}
 
 	return resolver.promise

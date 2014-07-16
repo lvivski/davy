@@ -6,8 +6,14 @@ function isFunction(fn) {
 	return fn && typeof fn === 'function'
 }
 
-function parse(args) {
-	return args.length === 1 && Array.isArray(args[0]) ?
-		args[0] :
-		[].slice.call(args)
+function parse() {
+	if  (arguments.length === 1 && Array.isArray(arguments[0])) {
+		return arguments[0]
+	} else {
+		var args = new Array(arguments.length)
+		for(var i = 0; i < args.length; ++i) {
+			args[i] = arguments[i]
+		}
+		return args
+	}
 }
