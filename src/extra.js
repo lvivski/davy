@@ -42,7 +42,7 @@ Promise.resolve = Promise.cast = function (val) {
 Promise.reject = function (err) {
 	var resolver = Promise.defer()
 	resolver.reject(err)
-	return resolve.promise
+	return resolver.promise
 }
 
 Promise.defer = function () {

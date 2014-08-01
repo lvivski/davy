@@ -157,7 +157,7 @@
   Promise.reject = function(err) {
     var resolver = Promise.defer();
     resolver.reject(err);
-    return resolve.promise;
+    return resolver.promise;
   };
   Promise.defer = function() {
     return new Resolver(new Promise());
