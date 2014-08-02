@@ -73,15 +73,9 @@ Promise.all = function () {
 		resolver.reject(err)
 	}
 
-	function _resolve(i) {
-		return function (value) {
-			resolve(value, i)
-		}
-	}
-
 	function resolve(value, i) {
 		if (isObject(value) && isFunction(value.then)) {
-			value.then(_resolve(i), reject)
+			value.then(function (val) { resolve(val, i) }, reject)
 			return
 		}
 		list[i] = value

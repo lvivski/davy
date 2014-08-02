@@ -6,13 +6,13 @@ function isFunction(fn) {
 	return fn && typeof fn === 'function'
 }
 
-function parse() {
-	if  (arguments.length === 1 && Array.isArray(arguments[0])) {
-		return arguments[0]
+function parse(obj) {
+	if  (obj.length === 1 && Array.isArray(obj[0])) {
+		return obj[0]
 	} else {
-		var args = new Array(arguments.length)
+		var args = new Array(obj.length);
 		for(var i = 0; i < args.length; ++i) {
-			args[i] = arguments[i]
+			args[i] = obj[i]
 		}
 		return args
 	}
