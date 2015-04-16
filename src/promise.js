@@ -29,10 +29,15 @@ Promise.prototype.isRejected = false
 
 Promise.prototype.then = function (onFulfill, onReject, onNotify) {
 	var resolver = new Resolver(new Promise),
-	    deferred = defer(resolver, onFulfill, onReject, onNotify)
+	    deferred = {
+		    resolver: resolver,
+		    fulfill: onFulfill,
+		    reject: onReject,
+		    notify: onNotify
+	    }
 
 	if (this.isFulfilled || this.isRejected) {
-		resolve([deferred], this.isFulfilled ? Promise.SUCCESS : Promise.FAILURE, this.value)
+		Resolver.resolve([deferred], this.isFulfilled ? Promise.SUCCESS : Promise.FAILURE, this.value)
 	} else {
 		this.__deferreds__.push(deferred)
 	}
@@ -43,12 +48,3 @@ Promise.prototype.then = function (onFulfill, onReject, onNotify) {
 Promise.SUCCESS = 'fulfill'
 Promise.FAILURE = 'reject'
 Promise.NOTIFY = 'notify'
-
-function defer(resolver, fulfill, reject, notify) {
-	return {
-		resolver: resolver,
-		fulfill: fulfill,
-		reject: reject,
-		notify: notify
-	}
-}

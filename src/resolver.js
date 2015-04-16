@@ -60,7 +60,7 @@ Resolver.prototype.reject = function (error) {
 Resolver.prototype.notify = function (value) {
 	var promise = this.promise
 	if (promise.isFulfilled || promise.isRejected) return
-	resolve(promise.__deferreds__, Promise.NOTIFY, value)
+	Resolver.resolve(promise.__deferreds__, Promise.NOTIFY, value)
 }
 
 Resolver.prototype.complete = function (value) {
@@ -68,11 +68,11 @@ Resolver.prototype.complete = function (value) {
 		type = promise.isFulfilled ? Promise.SUCCESS : Promise.FAILURE
 
 	promise.value = value
-	resolve(promise.__deferreds__, type, value)
+	Resolver.resolve(promise.__deferreds__, type, value)
 	promise.__deferreds__ = undefined
 }
 
-function resolve(deferreds, type, value) {
+Resolver.resolve = function (deferreds, type, value) {
 	if (!deferreds.length) return
 
 	nextTick(function () {

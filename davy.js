@@ -38,9 +38,14 @@
   Promise.prototype.isFulfilled = false;
   Promise.prototype.isRejected = false;
   Promise.prototype.then = function(onFulfill, onReject, onNotify) {
-    var resolver = new Resolver(new Promise()), deferred = defer(resolver, onFulfill, onReject, onNotify);
+    var resolver = new Resolver(new Promise()), deferred = {
+      resolver: resolver,
+      fulfill: onFulfill,
+      reject: onReject,
+      notify: onNotify
+    };
     if (this.isFulfilled || this.isRejected) {
-      resolve([ deferred ], this.isFulfilled ? Promise.SUCCESS : Promise.FAILURE, this.value);
+      Resolver.resolve([ deferred ], this.isFulfilled ? Promise.SUCCESS : Promise.FAILURE, this.value);
     } else {
       this.__deferreds__.push(deferred);
     }
@@ -49,14 +54,6 @@
   Promise.SUCCESS = "fulfill";
   Promise.FAILURE = "reject";
   Promise.NOTIFY = "notify";
-  function defer(resolver, fulfill, reject, notify) {
-    return {
-      resolver: resolver,
-      fulfill: fulfill,
-      reject: reject,
-      notify: notify
-    };
-  }
   function Resolver(promise) {
     this.promise = promise;
   }
@@ -111,15 +108,15 @@
   Resolver.prototype.notify = function(value) {
     var promise = this.promise;
     if (promise.isFulfilled || promise.isRejected) return;
-    resolve(promise.__deferreds__, Promise.NOTIFY, value);
+    Resolver.resolve(promise.__deferreds__, Promise.NOTIFY, value);
   };
   Resolver.prototype.complete = function(value) {
     var promise = this.promise, type = promise.isFulfilled ? Promise.SUCCESS : Promise.FAILURE;
     promise.value = value;
-    resolve(promise.__deferreds__, type, value);
+    Resolver.resolve(promise.__deferreds__, type, value);
     promise.__deferreds__ = undefined;
   };
-  function resolve(deferreds, type, value) {
+  Resolver.resolve = function(deferreds, type, value) {
     if (!deferreds.length) return;
     nextTick(function() {
       var i = 0;
@@ -143,7 +140,7 @@
         }
       }
     });
-  }
+  };
   Promise.prototype.progress = function(onProgress) {
     return this.then(null, null, onProgress);
   };
