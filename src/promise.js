@@ -1,6 +1,6 @@
 function Promise(fn) {
 	this.value = undefined
-	this.__deferreds = []
+	this.__deferreds__ = []
 
 	if (arguments.length > 0) {
 		var resolver = new Resolver(this)
@@ -11,6 +11,9 @@ function Promise(fn) {
 					},
 					function (err) {
 						resolver.reject(err)
+					},
+					function (val) {
+						resolver.notify(val)
 					})
 			} catch (e) {
 				resolver.reject(e)
@@ -24,14 +27,14 @@ function Promise(fn) {
 Promise.prototype.isFulfilled = false
 Promise.prototype.isRejected = false
 
-Promise.prototype.then = function (onFulfill, onReject) {
+Promise.prototype.then = function (onFulfill, onReject, onNotify) {
 	var resolver = new Resolver(new Promise),
-	    deferred = defer(resolver, onFulfill, onReject)
+	    deferred = defer(resolver, onFulfill, onReject, onNotify)
 
 	if (this.isFulfilled || this.isRejected) {
-		resolve(deferred, this.isFulfilled ? Promise.SUCCESS : Promise.FAILURE, this.value)
+		resolve([deferred], this.isFulfilled ? Promise.SUCCESS : Promise.FAILURE, this.value)
 	} else {
-		this.__deferreds.push(deferred)
+		this.__deferreds__.push(deferred)
 	}
 
 	return resolver.promise
@@ -39,11 +42,13 @@ Promise.prototype.then = function (onFulfill, onReject) {
 
 Promise.SUCCESS = 'fulfill'
 Promise.FAILURE = 'reject'
+Promise.NOTIFY = 'notify'
 
-function defer(resolver, fulfill, reject) {
+function defer(resolver, fulfill, reject, notify) {
 	return {
 		resolver: resolver,
 		fulfill: fulfill,
-		reject: reject
+		reject: reject,
+		notify: notify
 	}
 }

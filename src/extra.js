@@ -1,10 +1,14 @@
+Promise.prototype.progress = function (onProgress) {
+	return this.then(null, null, onProgress)
+}
+
 Promise.prototype['catch'] = function (onRejected) {
 	return this.then(null, onRejected)
 }
 
 Promise.prototype['throw'] = function () {
 	return this['catch'](function (error) {
-		next(function () {
+		nextTick(function () {
 			throw error
 		})
 	})
@@ -15,7 +19,7 @@ Promise.prototype['finally'] = function (onResolved) {
 }
 
 Promise.prototype['yield'] = function (value) {
-	return this.then(function() {
+	return this.then(function () {
 		return value
 	})
 }
@@ -55,8 +59,9 @@ Promise.each = function (list, iterator) {
 
 	if (len === 0) resolver.reject(TypeError())
 
-	for (var i = 0; i < len; ++i) {
-		iterator(list[i], i)
+	var i = 0
+	while (i < len) {
+		iterator(list[i], i++, list)
 	}
 
 	return resolver
@@ -73,9 +78,11 @@ Promise.all = function () {
 		resolver.reject(err)
 	}
 
-	function resolve(value, i) {
+	function resolve(value, i, list) {
 		if (isObject(value) && isFunction(value.then)) {
-			value.then(function (val) { resolve(val, i) }, reject)
+			value.then(function (val) {
+				resolve(val, i, list)
+			}, reject)
 			return
 		}
 		list[i] = value
@@ -108,7 +115,7 @@ Promise.wrap = function (fn) {
 	return function () {
 		var resolver = new Resolver(new Promise)
 
-		arguments[arguments.length++] = function(err, val) {
+		arguments[arguments.length++] = function (err, val) {
 			if (err) {
 				resolver.reject(err)
 			} else {
