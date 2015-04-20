@@ -1,28 +1,28 @@
 {
-	"name": "davy",
-	"version": "0.3.5",
-	"author": "Yehor Lvivski <lvivski@gmail.com>",
-	"description": "Promises/A+ implementation",
-	"keywords": [
-		"promise",
-		"a+",
-		"then",
-		"async"
-	],
-	"dependencies": {
-		"subsequent": "*"
-	},
-	"scripts": {
-		"test": "promises-aplus-tests test/adapter",
-		"prepublish": "make -B"
-	},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/lvivski/davy.git"
-	},
-	"devDependencies": {
-		"uglify-js": "*",
-		"promises-aplus-tests": "*"
-	},
-	"license": "MIT"
+  "name": "davy",
+  "version": "0.3.5",
+  "author": "Yehor Lvivski <lvivski@gmail.com>",
+  "description": "Promises/A+ implementation",
+  "keywords": [
+    "promise",
+    "a+",
+    "then",
+    "async"
+  ],
+  "dependencies": {
+    "subsequent": "*"
+  },
+  "scripts": {
+    "test": "promises-aplus-tests test/adapter",
+    "prepublish": "make -B"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lvivski/davy.git"
+  },
+  "devDependencies": {
+    "uglify-js": "*",
+    "promises-aplus-tests": "*"
+  },
+  "license": "MIT"
 }

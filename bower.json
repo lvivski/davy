@@ -1,18 +1,18 @@
 {
-	"name": "davy",
-	"version": "0.3.5",
-	"main": [
-		"davy.js"
-	],
-	"ignore": [
-		".*",
-		"src",
-		"test",
-		"Makefile",
-		"index.js",
-		"package.json"
-	],
-	"dependencies": {
-		"subsequent": "*"
-	}
+  "name": "davy",
+  "version": "0.3.5",
+  "main": [
+    "davy.js"
+  ],
+  "ignore": [
+    ".*",
+    "src",
+    "test",
+    "Makefile",
+    "index.js",
+    "package.json"
+  ],
+  "dependencies": {
+    "subsequent": "*"
+  }
 }
