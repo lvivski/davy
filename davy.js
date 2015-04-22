@@ -45,18 +45,18 @@
       notify: onNotify
     };
     if (this.isFulfilled || this.isRejected) {
-      Resolver.resolve([ deferred ], this.isFulfilled ? Promise.SUCCESS : Promise.FAILURE, this.value);
+      Resolver.resolve([ deferred ], this.isFulfilled ? Resolver.SUCCESS : Resolver.FAILURE, this.value);
     } else {
       this.__deferreds__.push(deferred);
     }
     return resolver.promise;
   };
-  Promise.SUCCESS = "fulfill";
-  Promise.FAILURE = "reject";
-  Promise.NOTIFY = "notify";
   function Resolver(promise) {
     this.promise = promise;
   }
+  Resolver.SUCCESS = "fulfill";
+  Resolver.FAILURE = "reject";
+  Resolver.NOTIFY = "notify";
   Resolver.prototype.fulfill = function(value) {
     var promise = this.promise;
     if (promise.isFulfilled || promise.isRejected) return;
@@ -111,7 +111,7 @@
     Resolver.resolve(promise.__deferreds__, Promise.NOTIFY, value);
   };
   Resolver.prototype.complete = function(value) {
-    var promise = this.promise, type = promise.isFulfilled ? Promise.SUCCESS : Promise.FAILURE;
+    var promise = this.promise, type = promise.isFulfilled ? Resolver.SUCCESS : Resolver.FAILURE;
     promise.value = value;
     Resolver.resolve(promise.__deferreds__, type, value);
     promise.__deferreds__ = undefined;
@@ -130,7 +130,7 @@
             resolver.reject(e);
             continue;
           }
-          if (type === Promise.NOTIFY) {
+          if (type === Resolver.NOTIFY) {
             resolver.notify(val);
           } else {
             resolver.fulfill(val);

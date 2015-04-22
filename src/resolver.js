@@ -2,6 +2,10 @@ function Resolver(promise) {
 	this.promise = promise
 }
 
+Resolver.SUCCESS = 'fulfill'
+Resolver.FAILURE = 'reject'
+Resolver.NOTIFY = 'notify'
+
 Resolver.prototype.fulfill = function (value) {
 	var promise = this.promise
 	if (promise.isFulfilled || promise.isRejected) return
@@ -65,7 +69,7 @@ Resolver.prototype.notify = function (value) {
 
 Resolver.prototype.complete = function (value) {
 	var promise = this.promise,
-		type = promise.isFulfilled ? Promise.SUCCESS : Promise.FAILURE
+		type = promise.isFulfilled ? Resolver.SUCCESS : Resolver.FAILURE
 
 	promise.value = value
 	Resolver.resolve(promise.__deferreds__, type, value)
@@ -89,7 +93,7 @@ Resolver.resolve = function (deferreds, type, value) {
 					resolver.reject(e)
 					continue
 				}
-				if (type === Promise.NOTIFY) {
+				if (type === Resolver.NOTIFY) {
 					resolver.notify(val)
 				} else {
 					resolver.fulfill(val)

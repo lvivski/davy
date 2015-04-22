@@ -37,14 +37,10 @@ Promise.prototype.then = function (onFulfill, onReject, onNotify) {
 	    }
 
 	if (this.isFulfilled || this.isRejected) {
-		Resolver.resolve([deferred], this.isFulfilled ? Promise.SUCCESS : Promise.FAILURE, this.value)
+		Resolver.resolve([deferred], this.isFulfilled ? Resolver.SUCCESS : Resolver.FAILURE, this.value)
 	} else {
 		this.__deferreds__.push(deferred)
 	}
 
 	return resolver.promise
 }
-
-Promise.SUCCESS = 'fulfill'
-Promise.FAILURE = 'reject'
-Promise.NOTIFY = 'notify'
