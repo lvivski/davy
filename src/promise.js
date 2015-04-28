@@ -1,6 +1,6 @@
 function Promise(fn) {
 	this.value = undefined
-	this.__deferreds__ = []
+	this[Resolver.DEFERREDS] = []
 
 	if (arguments.length > 0) {
 		var resolver = new Resolver(this)
@@ -24,6 +24,11 @@ function Promise(fn) {
 	}
 }
 
+Object.defineProperty(Promise.prototype, Resolver.DEFERREDS, {
+	configurable: true,
+	writable: true
+})
+
 Promise.prototype.isFulfilled = false
 Promise.prototype.isRejected = false
 
@@ -39,7 +44,7 @@ Promise.prototype.then = function (onFulfill, onReject, onNotify) {
 	if (this.isFulfilled || this.isRejected) {
 		Resolver.resolve([deferred], this.isFulfilled ? Resolver.SUCCESS : Resolver.FAILURE, this.value)
 	} else {
-		this.__deferreds__.push(deferred)
+		this[Resolver.DEFERREDS].push(deferred)
 	}
 
 	return resolver.promise

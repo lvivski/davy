@@ -6,6 +6,8 @@ Resolver.SUCCESS = 'fulfill'
 Resolver.FAILURE = 'reject'
 Resolver.NOTIFY = 'notify'
 
+Resolver.DEFERREDS = '__deferreds' + Math.random() + '__'
+
 Resolver.prototype.fulfill = function (value) {
 	var promise = this.promise
 	if (promise.isFulfilled || promise.isRejected) return
@@ -64,7 +66,7 @@ Resolver.prototype.reject = function (error) {
 Resolver.prototype.notify = function (value) {
 	var promise = this.promise
 	if (promise.isFulfilled || promise.isRejected) return
-	Resolver.resolve(promise.__deferreds__, Promise.NOTIFY, value)
+	Resolver.resolve(promise[Resolver.DEFERREDS], Promise.NOTIFY, value)
 }
 
 Resolver.prototype.complete = function (value) {
@@ -72,8 +74,8 @@ Resolver.prototype.complete = function (value) {
 		type = promise.isFulfilled ? Resolver.SUCCESS : Resolver.FAILURE
 
 	promise.value = value
-	Resolver.resolve(promise.__deferreds__, type, value)
-	promise.__deferreds__ = undefined
+	Resolver.resolve(promise[Resolver.DEFERREDS], type, value)
+	promise[Resolver.DEFERREDS] = undefined
 }
 
 Resolver.resolve = function (deferreds, type, value) {

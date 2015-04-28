@@ -15,7 +15,7 @@
   }
   function Promise(fn) {
     this.value = undefined;
-    this.__deferreds__ = [];
+    this[Resolver.DEFERREDS] = [];
     if (arguments.length > 0) {
       var resolver = new Resolver(this);
       if (typeof fn == "function") {
@@ -35,6 +35,10 @@
       }
     }
   }
+  Object.defineProperty(Promise.prototype, Resolver.DEFERREDS, {
+    configurable: true,
+    writable: true
+  });
   Promise.prototype.isFulfilled = false;
   Promise.prototype.isRejected = false;
   Promise.prototype.then = function(onFulfill, onReject, onNotify) {
@@ -47,7 +51,7 @@
     if (this.isFulfilled || this.isRejected) {
       Resolver.resolve([ deferred ], this.isFulfilled ? Resolver.SUCCESS : Resolver.FAILURE, this.value);
     } else {
-      this.__deferreds__.push(deferred);
+      this[Resolver.DEFERREDS].push(deferred);
     }
     return resolver.promise;
   };
@@ -57,6 +61,7 @@
   Resolver.SUCCESS = "fulfill";
   Resolver.FAILURE = "reject";
   Resolver.NOTIFY = "notify";
+  Resolver.DEFERREDS = "__deferreds" + Math.random() + "__";
   Resolver.prototype.fulfill = function(value) {
     var promise = this.promise;
     if (promise.isFulfilled || promise.isRejected) return;
@@ -108,13 +113,13 @@
   Resolver.prototype.notify = function(value) {
     var promise = this.promise;
     if (promise.isFulfilled || promise.isRejected) return;
-    Resolver.resolve(promise.__deferreds__, Promise.NOTIFY, value);
+    Resolver.resolve(promise[Resolver.DEFERREDS], Promise.NOTIFY, value);
   };
   Resolver.prototype.complete = function(value) {
     var promise = this.promise, type = promise.isFulfilled ? Resolver.SUCCESS : Resolver.FAILURE;
     promise.value = value;
-    Resolver.resolve(promise.__deferreds__, type, value);
-    promise.__deferreds__ = undefined;
+    Resolver.resolve(promise[Resolver.DEFERREDS], type, value);
+    promise[Resolver.DEFERREDS] = undefined;
   };
   Resolver.resolve = function(deferreds, type, value) {
     if (!deferreds.length) return;
