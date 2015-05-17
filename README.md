@@ -10,16 +10,16 @@ Yet another [Promises/A+](http://promises-aplus.github.com/promises-spec) implem
 ## API
 
 #### `new Davy(resolver)`
-Create a new promise. The passed in function will receive functions `resolve` and `reject` as its arguments which can be called to seal the fate of the created promise.
+Create a new promise. The passed in function will receive functions `resolve`, `reject`, `notify` as its arguments which can be called to seal the fate of the created promise.
 
-#### `.then(onFulfill, onReject)`
-Returns a new promise chained from this promise. The new promise will be rejected or resolved defer on the passed `onFulfill`, `onReject` and the state of this promise.
-
-#### `.catch(handler)`
-This is a catch-all exception handler, shortcut for calling `.then(null, handler)` on this promise. Any exception happening in a `.then`-chain will propagate to nearest `.catch` handler.
+#### `.then(onFulfill, onReject, onNotify)`
+Returns a new promise chained from this promise. The new promise will be rejected or resolved defer on the passed `onFulfill`, `onReject`, `onNotify` and the state of this promise.
 
 #### `.catch(handler)`
 This is a catch-all exception handler, shortcut for calling `.then(null, handler)` on this promise. Any exception happening in a `.then`-chain will propagate to nearest `.catch` handler.
+
+#### `.progress(handler)`
+This is a progress handler, shortcut for calling `.then(null, null, handler)` on this promise.
 
 #### `.throw(handler)`
 Like `.catch`, but any unhandled rejection that ends up here will be thrown as an error.
