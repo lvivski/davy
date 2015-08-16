@@ -31,9 +31,9 @@ Promise.prototype.tap = function (onFulfilled) {
 Promise.prototype.spread = function (onFulfilled, onRejected) {
 	return this.then(
 		function (val) {
-			return onFulfilled.apply(this, val);
+			return onFulfilled.apply(this, val)
 		},
-		onRejected);
+		onRejected)
 }
 
 Promise.resolve = Promise.cast = function (val) {
