@@ -1,4 +1,4 @@
-(function(global) {
+(function(root) {
   "use strict";
   var nextTick;
   if (typeof define === "function" && define.amd) {
@@ -10,8 +10,8 @@
     module.exports = Promise;
     nextTick = require("subsequent");
   } else {
-    global.Davy = Promise;
-    nextTick = global.subsequent;
+    root.Davy = Promise;
+    nextTick = root.subsequent;
   }
   function Promise(fn) {
     this.value = undefined;
@@ -257,4 +257,4 @@
       return args;
     }
   }
-})(this);
+})(Function("return this")());

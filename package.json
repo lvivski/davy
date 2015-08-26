@@ -10,7 +10,7 @@
     "async"
   ],
   "dependencies": {
-    "subsequent": "*"
+    "subsequent": "^1.0.0"
   },
   "scripts": {
     "test": "promises-aplus-tests test/adapter",

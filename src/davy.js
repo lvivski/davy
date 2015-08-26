@@ -8,6 +8,6 @@ if (typeof define === 'function' && define.amd) {
 	module.exports = Promise
 	nextTick = require('subsequent')
 } else {
-	global.Davy = Promise
-	nextTick = global.subsequent
+	root.Davy = Promise
+	nextTick = root.subsequent
 }
