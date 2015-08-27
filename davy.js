@@ -38,7 +38,7 @@
   Promise.prototype.isFulfilled = false;
   Promise.prototype.isRejected = false;
   Promise.prototype.then = function(onFulfill, onReject, onNotify) {
-    var resolver = new Resolver(new Promise()), deferred = {
+    var resolver = Promise.defer(), deferred = {
       resolver: resolver,
       fulfill: onFulfill,
       reject: onReject,
@@ -199,11 +199,14 @@
     function reject(err) {
       resolver.reject(err);
     }
+    function wrap(resolve, i, list) {
+      return function(val) {
+        resolve(val, i, list);
+      };
+    }
     function resolve(value, i, list) {
       if (isObject(value) && isFunction(value.then)) {
-        value.then(function(val) {
-          resolve(val, i, list);
-        }, reject);
+        value.then(wrap(resolve, i, list), reject);
         return;
       }
       list[i] = value;
@@ -228,15 +231,18 @@
   };
   Promise.wrap = function(fn) {
     return function() {
-      var resolver = new Resolver(new Promise());
-      arguments[arguments.length++] = function(err, val) {
+      var len = arguments.length, i = 0, args = new Array(len + 1), resolver = Promise.defer();
+      while (i < len) {
+        args[i] = arguments[i++];
+      }
+      args[len] = function(err, val) {
         if (err) {
           resolver.reject(err);
         } else {
           resolver.fulfill(val);
         }
       };
-      fn.apply(this, arguments);
+      fn.apply(this, args);
       return resolver.promise;
     };
   };

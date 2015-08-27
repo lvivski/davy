@@ -27,7 +27,7 @@ Promise.prototype.isFulfilled = false
 Promise.prototype.isRejected = false
 
 Promise.prototype.then = function (onFulfill, onReject, onNotify) {
-	var resolver = new Resolver(new Promise),
+	var resolver = Promise.defer(),
 	    deferred = {
 		    resolver: resolver,
 		    fulfill: onFulfill,
