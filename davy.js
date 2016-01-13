@@ -47,6 +47,9 @@
     if (this.isFulfilled || this.isRejected) {
       Resolver.resolve([ deferred ], this.isFulfilled ? Resolver.SUCCESS : Resolver.FAILURE, this.value);
     } else {
+      if (this.value) {
+        Resolver.resolve([ deferred ], Resolver.NOTIFY, this.value);
+      }
       this.__deferreds__.push(deferred);
     }
     return resolver.promise;
@@ -108,7 +111,8 @@
   Resolver.prototype.notify = function(value) {
     var promise = this.promise;
     if (promise.isFulfilled || promise.isRejected) return;
-    Resolver.resolve(promise.__deferreds__, Promise.NOTIFY, value);
+    promise.value = value;
+    Resolver.resolve(promise.__deferreds__, Resolver.NOTIFY, value);
   };
   Resolver.prototype.complete = function(value) {
     var promise = this.promise, type = promise.isFulfilled ? Resolver.SUCCESS : Resolver.FAILURE;
@@ -186,7 +190,7 @@
   };
   Promise.each = function(list, iterator) {
     var resolver = Promise.defer(), len = list.length;
-    if (len === 0) resolver.reject(TypeError());
+    if (len === 0) resolver.fulfill(TypeError());
     var i = 0;
     while (i < len) {
       iterator(list[i], i++, list);
@@ -246,11 +250,38 @@
       return resolver.promise;
     };
   };
+  Promise.unwrap = function(tree, path) {
+    function visit(node, depth) {
+      return Promise.resolve(node).then(function(node) {
+        if (!isObject(node) || isEmpty(node)) {
+          return node;
+        }
+        var isArray = Array.isArray(node), result = isArray ? [] : {}, promises = Object.keys(node).map(function(key) {
+          if (path && path[depth] !== key) {
+            return Promise.resolve();
+          }
+          var value = node[key];
+          if (isArray) {
+            key = result.length;
+          }
+          result[key] = null;
+          return visit(value, depth + 1).then(function(unwrapped) {
+            result[key] = unwrapped;
+          });
+        });
+        return Promise.all(promises).yield(result);
+      });
+    }
+    return visit(tree, 0);
+  };
   function isObject(obj) {
     return obj && typeof obj === "object";
   }
   function isFunction(fn) {
     return fn && typeof fn === "function";
+  }
+  function isEmpty(obj) {
+    return Object.keys(obj).length === 0;
   }
   function parse(obj) {
     if (obj.length === 1 && Array.isArray(obj[0])) {

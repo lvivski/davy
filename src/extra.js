@@ -57,7 +57,7 @@ Promise.each = function (list, iterator) {
 	var resolver = Promise.defer(),
 		len = list.length
 
-	if (len === 0) resolver.reject(TypeError())
+	if (len === 0) resolver.fulfill(TypeError())
 
 	var i = 0
 	while (i < len) {
@@ -137,4 +137,34 @@ Promise.wrap = function (fn) {
 
 		return resolver.promise
 	}
+}
+
+Promise.unwrap = function (tree, path) {
+	function visit(node, depth) {
+		return Promise.resolve(node).then(function (node) {
+			if (!isObject(node) || isEmpty(node)) {
+				return node
+			}
+			var isArray = Array.isArray(node),
+				result = isArray ? [] : {},
+				promises = Object.keys(node).map(function (key) {
+					if (path && path[depth] !== key) {
+						return Promise.resolve()
+					}
+					var value = node[key]
+					if (isArray) {
+						key = result.length
+					}
+					result[key] = null
+					return visit(value, depth +1)
+						.then(function (unwrapped) {
+							result[key] = unwrapped
+						})
+				})
+			
+			return Promise.all(promises).yield(result)
+		})
+	}
+
+	return visit(tree, 0)
 }

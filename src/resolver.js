@@ -64,7 +64,8 @@ Resolver.prototype.reject = function (error) {
 Resolver.prototype.notify = function (value) {
 	var promise = this.promise
 	if (promise.isFulfilled || promise.isRejected) return
-	Resolver.resolve(promise.__deferreds__, Promise.NOTIFY, value)
+	promise.value = value
+	Resolver.resolve(promise.__deferreds__, Resolver.NOTIFY, value)
 }
 
 Resolver.prototype.complete = function (value) {
