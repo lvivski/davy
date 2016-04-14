@@ -23,7 +23,7 @@ Resolver.prototype.fulfill = function (value) {
 		}
 		if (isFunction(then)) {
 			var isResolved = false,
-				self = this
+			    self = this
 			try {
 				then.call(
 					value,
@@ -70,7 +70,7 @@ Resolver.prototype.notify = function (value) {
 
 Resolver.prototype.complete = function (value) {
 	var promise = this.promise,
-		type = promise.isFulfilled ? Resolver.SUCCESS : Resolver.FAILURE
+	    type = promise.isFulfilled ? Resolver.SUCCESS : Resolver.FAILURE
 
 	promise.value = value
 	Resolver.resolve(promise.__deferreds__, type, value)

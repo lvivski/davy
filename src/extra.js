@@ -69,8 +69,8 @@ Promise.each = function (list, iterator) {
 
 Promise.all = function () {
 	var list = parse(arguments),
-		length = list.length,
-		resolver = Promise.each(list, resolve)
+	    length = list.length,
+	    resolver = Promise.each(list, resolve)
 
 	return resolver.promise
 
@@ -98,7 +98,7 @@ Promise.all = function () {
 
 Promise.race = function () {
 	var list = parse(arguments),
-		resolver = Promise.each(list, resolve)
+	    resolver = Promise.each(list, resolve)
 
 	return resolver.promise
 
@@ -118,9 +118,9 @@ Promise.race = function () {
 Promise.wrap = function (fn) {
 	return function () {
 		var len = arguments.length,
-			i = 0,
-			args = new Array(len + 1),
-			resolver = Promise.defer()
+		    i = 0,
+		    args = new Array(len + 1),
+		    resolver = Promise.defer()
 
 		while (i < len) {
 			args[i] = arguments[i++]
@@ -146,21 +146,21 @@ Promise.unwrap = function (tree, path) {
 				return node
 			}
 			var isArray = Array.isArray(node),
-				result = isArray ? [] : {},
-				promises = Object.keys(node).map(function (key) {
-					if (path && path[depth] !== key) {
-						return Promise.resolve()
-					}
-					var value = node[key]
-					if (isArray) {
-						key = result.length
-					}
-					result[key] = null
-					return visit(value, depth +1)
-						.then(function (unwrapped) {
-							result[key] = unwrapped
-						})
-				})
+			    result = isArray ? [] : {},
+			    promises = Object.keys(node).map(function (key) {
+			    	if (path && path[depth] !== key) {
+			    		return Promise.resolve()
+			    	}
+			    	var value = node[key]
+			    	if (isArray) {
+			    		key = result.length
+			    	}
+			    	result[key] = null
+			    	return visit(value, depth +1)
+			    		.then(function (unwrapped) {
+			    			result[key] = unwrapped
+			    		})
+			    })
 			
 			return Promise.all(promises).yield(result)
 		})

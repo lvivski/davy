@@ -15,7 +15,7 @@ function parse(obj) {
 		return obj[0]
 	} else {
 		var args = new Array(obj.length),
-			i = 0
+		    i = 0
 		while (i < args.length) {
 			args[i] = obj[i++]
 		}

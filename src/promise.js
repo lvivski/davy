@@ -29,10 +29,10 @@ Promise.prototype.isRejected = false
 Promise.prototype.then = function (onFulfill, onReject, onNotify) {
 	var resolver = Promise.defer(),
 	    deferred = {
-		    resolver: resolver,
-		    fulfill: onFulfill,
-		    reject: onReject,
-		    notify: onNotify
+	    	resolver: resolver,
+	    	fulfill: onFulfill,
+	    	reject: onReject,
+	    	notify: onNotify
 	    }
 
 	if (this.isFulfilled || this.isRejected) {
