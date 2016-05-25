@@ -41,5 +41,9 @@ Promise.unwrap(promiseTree, ['g']).then(function (data) {
 Promise.unwrap(promiseTree).then(function (data) {
 	console.log(data)
     console.log('all', Date.now() - time)
+}).then(function () {
+    Promise.unwrap(promiseTree).then(function (data) {
+	    console.log('all cached', Date.now() - time)
+    });
 });
 

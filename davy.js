@@ -45,10 +45,10 @@
       notify: onNotify
     };
     if (this.isFulfilled || this.isRejected) {
-      Resolver.resolve([ deferred ], this.isFulfilled ? Resolver.SUCCESS : Resolver.FAILURE, this.value);
+      Resolver.handle([ deferred ], this.isFulfilled ? Resolver.SUCCESS : Resolver.FAILURE, this.value);
     } else {
       if (this.value) {
-        Resolver.resolve([ deferred ], Resolver.NOTIFY, this.value);
+        Resolver.handle([ deferred ], Resolver.NOTIFY, this.value);
       }
       this.__deferreds__.push(deferred);
     }
@@ -76,23 +76,23 @@
         return;
       }
       if (isFunction(then)) {
-        var isResolved = false, self = this;
+        var isPending = true, self = this;
         try {
           then.call(value, function(val) {
-            if (!isResolved) {
-              isResolved = true;
+            if (isPending) {
+              isPending = false;
               self.fulfill(val);
             }
           }, function(err) {
-            if (!isResolved) {
-              isResolved = true;
+            if (isPending) {
+              isPending = false;
               self.reject(err);
             }
           }, function(val) {
             self.notify(val);
           });
         } catch (e) {
-          if (!isResolved) {
+          if (isPending) {
             this.reject(e);
           }
         }
@@ -112,15 +112,15 @@
     var promise = this.promise;
     if (promise.isFulfilled || promise.isRejected) return;
     promise.value = value;
-    Resolver.resolve(promise.__deferreds__, Resolver.NOTIFY, value);
+    Resolver.handle(promise.__deferreds__, Resolver.NOTIFY, value);
   };
   Resolver.prototype.complete = function(value) {
     var promise = this.promise, type = promise.isFulfilled ? Resolver.SUCCESS : Resolver.FAILURE;
     promise.value = value;
-    Resolver.resolve(promise.__deferreds__, type, value);
+    Resolver.handle(promise.__deferreds__, type, value);
     promise.__deferreds__ = undefined;
   };
-  Resolver.resolve = function(deferreds, type, value) {
+  Resolver.handle = function(deferreds, type, value) {
     if (!deferreds.length) return;
     nextTick(function() {
       var i = 0;

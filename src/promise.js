@@ -36,10 +36,10 @@ Promise.prototype.then = function (onFulfill, onReject, onNotify) {
 	    }
 
 	if (this.isFulfilled || this.isRejected) {
-		Resolver.resolve([deferred], this.isFulfilled ? Resolver.SUCCESS : Resolver.FAILURE, this.value)
+		Resolver.handle([deferred], this.isFulfilled ? Resolver.SUCCESS : Resolver.FAILURE, this.value)
 	} else {
 		if (this.value) {
-			Resolver.resolve([deferred], Resolver.NOTIFY, this.value)
+			Resolver.handle([deferred], Resolver.NOTIFY, this.value)
 		}
 		this.__deferreds__.push(deferred)
 	}
