@@ -22,9 +22,7 @@ Resolver.prototype.fulfill = function (value) {
 			return
 		}
 		if (isFunction(then)) {
-			Resolver.resolve(function (resolve, reject, notify) {
-				value.then(resolve, reject, notify)
-			}, this)
+			Resolver.resolve(then.bind(value), this)
 			return
 		}
 	}
