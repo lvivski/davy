@@ -51,30 +51,32 @@ Resolver.prototype.fulfill = function (value) {
 		}
 	}
 	promise.isFulfilled = true
-	this.complete(value)
+	Resolver.complete(promise, value)
 }
 
 Resolver.prototype.reject = function (error) {
 	var promise = this.promise
 	if (promise.isFulfilled || promise.isRejected) return
 	promise.isRejected = true
-	this.complete(error)
+	Resolver.complete(promise, error)
 }
 
 Resolver.prototype.notify = function (value) {
 	var promise = this.promise
 	if (promise.isFulfilled || promise.isRejected) return
-	promise.value = value
-	Resolver.handle(promise.__deferreds__, Resolver.NOTIFY, value)
+	Resolver.complete(promise, value)
 }
 
-Resolver.prototype.complete = function (value) {
-	var promise = this.promise,
-	    type = promise.isFulfilled ? Resolver.SUCCESS : Resolver.FAILURE
+Resolver.complete = function (promise, value) {
+	var type = promise.isFulfilled ? Resolver.SUCCESS :
+			   promise.isRejected ? Resolver.FAILURE :
+			   Resolver.NOTIFY
 
 	promise.value = value
 	Resolver.handle(promise.__deferreds__, type, value)
-	promise.__deferreds__ = undefined
+	if (type !== Resolver.NOTIFY) {
+		promise.__deferreds__ = undefined
+	}
 }
 
 Resolver.handle = function (deferreds, type, value) {
