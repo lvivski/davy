@@ -37,7 +37,7 @@ Promise.prototype.spread = function (onFulfilled, onRejected) {
 }
 
 Promise.resolve = Promise.cast = function (val) {
-	if (isObject(val) && isFunction(val.then)) {
+	if (isLikePromise(val)) {
 		return val
 	}
 	return new Promise(val)
@@ -61,7 +61,7 @@ Promise.each = function (list, iterator) {
 
 	var i = 0
 	while (i < len) {
-		iterator(list[i], i++, list)
+		iterator(list[i], i++)
 	}
 
 	return resolver
@@ -78,15 +78,11 @@ Promise.all = function () {
 		resolver.reject(err)
 	}
 
-	function wrap(resolve, i, list) {
-		return function (val) {
-			resolve(val, i, list)
-		}
-	}
-
-	function resolve(value, i, list) {
-		if (isObject(value) && isFunction(value.then)) {
-			value.then(wrap(resolve, i, list), reject)
+	function resolve(value, i) {
+		if (isLikePromise(value)) {
+			value.then(function (val) {
+				resolve(val, i)
+			}, reject)
 			return
 		}
 		list[i] = value
@@ -107,7 +103,7 @@ Promise.race = function () {
 	}
 
 	function resolve(value) {
-		if (isObject(value) && isFunction(value.then)) {
+		if (isLikePromise(value)) {
 			value.then(resolve, reject)
 			return
 		}
@@ -161,7 +157,7 @@ Promise.unwrap = function (tree, path) {
 			    			result[key] = unwrapped
 			    		})
 			    })
-			
+
 			return Promise.all(promises).yield(result)
 		})
 	}

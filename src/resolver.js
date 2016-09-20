@@ -88,7 +88,7 @@ Resolver.handle = function (promise, deferreds) {
 }
 
 Resolver.resolve = function (fn, resolver) {
-	var isPending = true;
+	var isPending = true
 	try {
 		fn(function (val) {
 				if (isPending) {

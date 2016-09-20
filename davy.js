@@ -166,7 +166,7 @@
     }, onRejected);
   };
   Promise.resolve = Promise.cast = function(val) {
-    if (isObject(val) && isFunction(val.then)) {
+    if (isLikePromise(val)) {
       return val;
     }
     return new Promise(val);
@@ -184,7 +184,7 @@
     if (len === 0) resolver.fulfill(TypeError());
     var i = 0;
     while (i < len) {
-      iterator(list[i], i++, list);
+      iterator(list[i], i++);
     }
     return resolver;
   };
@@ -194,14 +194,11 @@
     function reject(err) {
       resolver.reject(err);
     }
-    function wrap(resolve, i, list) {
-      return function(val) {
-        resolve(val, i, list);
-      };
-    }
-    function resolve(value, i, list) {
-      if (isObject(value) && isFunction(value.then)) {
-        value.then(wrap(resolve, i, list), reject);
+    function resolve(value, i) {
+      if (isLikePromise(value)) {
+        value.then(function(val) {
+          resolve(val, i);
+        }, reject);
         return;
       }
       list[i] = value;
@@ -217,7 +214,7 @@
       resolver.reject(err);
     }
     function resolve(value) {
-      if (isObject(value) && isFunction(value.then)) {
+      if (isLikePromise(value)) {
         value.then(resolve, reject);
         return;
       }
@@ -273,6 +270,9 @@
   }
   function isEmpty(obj) {
     return Object.keys(obj).length === 0;
+  }
+  function isLikePromise(obj) {
+    return isObject(obj) && isFunction(obj.then);
   }
   function parse(obj) {
     if (obj.length === 1 && Array.isArray(obj[0])) {
