@@ -22,7 +22,9 @@ Resolver.prototype.fulfill = function (value) {
 			return
 		}
 		if (isFunction(then)) {
-			Resolver.resolve(then.bind(value), this)
+			Resolver.resolve(function (resolve, reject, notify) {
+				value.then(resolve, reject, notify)
+			}, this)
 			return
 		}
 	}
@@ -61,28 +63,31 @@ Resolver.handle = function (promise, deferreds) {
 				Resolver.NOTIFY,
 		value = promise.value
 
+	var i = 0
+	while (i < deferreds.length) {
+		Resolver.handleOne(deferreds[i++], type, value)
+	}
+}
+
+Resolver.handleOne = function(deferred, type, value) {
+	var fn = deferred[type],
+		resolver = deferred.resolver
 	nextTick(function () {
-		var i = 0
-		while (i < deferreds.length) {
-			var deferred = deferreds[i++],
-				fn = deferred[type],
-				resolver = deferred.resolver
-			if (isFunction(fn)) {
-				var val
-				try {
-					val = fn(value)
-				} catch (e) {
-					resolver.reject(e)
-					continue
-				}
-				if (type === Resolver.NOTIFY) {
-					resolver.notify(val)
-				} else {
-					resolver.fulfill(val)
-				}
-			} else {
-				resolver[type](value)
+		if (isFunction(fn)) {
+			var val
+			try {
+				val = fn(value)
+			} catch (e) {
+				resolver.reject(e)
+				return
 			}
+			if (type === Resolver.NOTIFY) {
+				resolver.notify(val)
+			} else {
+				resolver.fulfill(val)
+			}
+		} else {
+			resolver[type](value)
 		}
 	})
 }
@@ -91,20 +96,20 @@ Resolver.resolve = function (fn, resolver) {
 	var isPending = true
 	try {
 		fn(function (val) {
-				if (isPending) {
-					isPending = false
-					resolver.fulfill(val)
-				}
-			},
-			function (err) {
-				if (isPending) {
-					isPending = false
-					resolver.reject(err)
-				}
-			},
-			function (val) {
-				resolver.notify(val)
-			})
+			if (isPending) {
+				isPending = false
+				resolver.fulfill(val)
+			}
+		},
+		function (err) {
+			if (isPending) {
+				isPending = false
+				resolver.reject(err)
+			}
+		},
+		function (val) {
+			resolver.notify(val)
+		})
 	} catch (e) {
 		if (isPending) {
 			resolver.reject(e)

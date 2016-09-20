@@ -28,6 +28,5 @@ Promise.prototype.then = function (onFulfill, onReject, onNotify) {
 	} else if (!this.value) {
 		this.__deferreds__.push(deferred)
 	}
-
 	return resolver.promise
 }

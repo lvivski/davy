@@ -63,7 +63,9 @@
         return;
       }
       if (isFunction(then)) {
-        Resolver.resolve(then.bind(value), this);
+        Resolver.resolve(function(resolve, reject, notify) {
+          value.then(resolve, reject, notify);
+        }, this);
         return;
       }
     }
@@ -91,26 +93,29 @@
   Resolver.handle = function(promise, deferreds) {
     if (!deferreds.length) return;
     var type = promise.isFulfilled ? Resolver.SUCCESS : promise.isRejected ? Resolver.FAILURE : Resolver.NOTIFY, value = promise.value;
+    var i = 0;
+    while (i < deferreds.length) {
+      Resolver.handleOne(deferreds[i++], type, value);
+    }
+  };
+  Resolver.handleOne = function(deferred, type, value) {
+    var fn = deferred[type], resolver = deferred.resolver;
     nextTick(function() {
-      var i = 0;
-      while (i < deferreds.length) {
-        var deferred = deferreds[i++], fn = deferred[type], resolver = deferred.resolver;
-        if (isFunction(fn)) {
-          var val;
-          try {
-            val = fn(value);
-          } catch (e) {
-            resolver.reject(e);
-            continue;
-          }
-          if (type === Resolver.NOTIFY) {
-            resolver.notify(val);
-          } else {
-            resolver.fulfill(val);
-          }
-        } else {
-          resolver[type](value);
+      if (isFunction(fn)) {
+        var val;
+        try {
+          val = fn(value);
+        } catch (e) {
+          resolver.reject(e);
+          return;
         }
+        if (type === Resolver.NOTIFY) {
+          resolver.notify(val);
+        } else {
+          resolver.fulfill(val);
+        }
+      } else {
+        resolver[type](value);
       }
     });
   };
@@ -184,7 +189,7 @@
     if (len === 0) resolver.fulfill(TypeError());
     var i = 0;
     while (i < len) {
-      iterator(list[i], i++);
+      iterator(list[i], i++, list);
     }
     return resolver;
   };
@@ -194,10 +199,10 @@
     function reject(err) {
       resolver.reject(err);
     }
-    function resolve(value, i) {
+    function resolve(value, i, list) {
       if (isLikePromise(value)) {
         value.then(function(val) {
-          resolve(val, i);
+          resolve(val, i, list);
         }, reject);
         return;
       }
@@ -223,18 +228,38 @@
   };
   Promise.wrap = function(fn) {
     return function() {
-      var len = arguments.length, i = 0, args = new Array(len + 1), resolver = Promise.defer();
+      var len = arguments.length, i = 0, args = new Array(len), resolver = Promise.defer();
       while (i < len) {
         args[i] = arguments[i++];
       }
-      args[len] = function(err, val) {
+      var callback = function(err, val) {
         if (err) {
           resolver.reject(err);
         } else {
           resolver.fulfill(val);
         }
       };
-      fn.apply(this, args);
+      try {
+        switch (len) {
+         case 2:
+          fn.call(this, args[0], args[1], callback);
+          break;
+
+         case 1:
+          fn.call(this, args[0], callback);
+          break;
+
+         case 0:
+          fn.call(this, callback);
+          break;
+
+         default:
+          args.push(callback);
+          fn.apply(this, args);
+        }
+      } catch (e) {
+        resolver.reject(e);
+      }
       return resolver.promise;
     };
   };

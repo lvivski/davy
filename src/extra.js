@@ -61,7 +61,7 @@ Promise.each = function (list, iterator) {
 
 	var i = 0
 	while (i < len) {
-		iterator(list[i], i++)
+		iterator(list[i], i++, list)
 	}
 
 	return resolver
@@ -69,8 +69,8 @@ Promise.each = function (list, iterator) {
 
 Promise.all = function () {
 	var list = parse(arguments),
-	    length = list.length,
-	    resolver = Promise.each(list, resolve)
+		length = list.length,
+		resolver = Promise.each(list, resolve)
 
 	return resolver.promise
 
@@ -78,10 +78,10 @@ Promise.all = function () {
 		resolver.reject(err)
 	}
 
-	function resolve(value, i) {
+	function resolve(value, i, list) {
 		if (isLikePromise(value)) {
 			value.then(function (val) {
-				resolve(val, i)
+				resolve(val, i, list)
 			}, reject)
 			return
 		}
@@ -94,7 +94,7 @@ Promise.all = function () {
 
 Promise.race = function () {
 	var list = parse(arguments),
-	    resolver = Promise.each(list, resolve)
+		resolver = Promise.each(list, resolve)
 
 	return resolver.promise
 
@@ -114,22 +114,40 @@ Promise.race = function () {
 Promise.wrap = function (fn) {
 	return function () {
 		var len = arguments.length,
-		    i = 0,
-		    args = new Array(len + 1),
-		    resolver = Promise.defer()
+			i = 0,
+			args = new Array(len),
+			resolver = Promise.defer()
 
 		while (i < len) {
 			args[i] = arguments[i++]
 		}
 
-		args[len] = function (err, val) {
+		var callback = function (err, val) {
 			if (err) {
 				resolver.reject(err)
 			} else {
 				resolver.fulfill(val)
 			}
 		}
-		fn.apply(this, args)
+
+		try {
+			switch(len) {
+				case 2:
+					fn.call(this, args[0], args[1], callback)
+					break
+				case 1:
+					fn.call(this, args[0], callback)
+					break
+				case 0:
+					fn.call(this, callback)
+					break
+				default:
+					args.push(callback)
+					fn.apply(this, args)
+			}
+		} catch (e) {
+			resolver.reject(e)
+		}
 
 		return resolver.promise
 	}
@@ -142,21 +160,21 @@ Promise.unwrap = function (tree, path) {
 				return node
 			}
 			var isArray = Array.isArray(node),
-			    result = isArray ? [] : {},
-			    promises = Object.keys(node).map(function (key) {
-			    	if (path && path[depth] !== key) {
-			    		return Promise.resolve()
-			    	}
-			    	var value = node[key]
-			    	if (isArray) {
-			    		key = result.length
-			    	}
-			    	result[key] = null
-			    	return visit(value, depth +1)
-			    		.then(function (unwrapped) {
-			    			result[key] = unwrapped
-			    		})
-			    })
+				result = isArray ? [] : {},
+				promises = Object.keys(node).map(function (key) {
+					if (path && path[depth] !== key) {
+						return Promise.resolve()
+					}
+					var value = node[key]
+					if (isArray) {
+						key = result.length
+					}
+					result[key] = null
+					return visit(value, depth + 1)
+						.then(function (unwrapped) {
+							result[key] = unwrapped
+						})
+				})
 
 			return Promise.all(promises).yield(result)
 		})
