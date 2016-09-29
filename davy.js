@@ -251,7 +251,7 @@
       return resolver.promise;
     };
   };
-  Promise.unwrap = function(tree, path) {
+  Promise.traverse = function(tree, path) {
     function visit(node, depth) {
       return Promise.resolve(node).then(function(node) {
         if (!isObject(node) || isEmpty(node)) {

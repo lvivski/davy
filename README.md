@@ -10,10 +10,10 @@ Yet another [Promises/A+](http://promises-aplus.github.com/promises-spec) implem
 ## API
 
 #### `new Davy(resolver)`
-Create a new promise. The passed in function will receive functions `resolve`, `reject`, `notify` as its arguments which can be called to seal the fate of the created promise.
+Create a new promise. The passed in function will receive functions `resolve`, `reject` as its arguments which can be called to seal the fate of the created promise.
 
-#### `.then(onFulfill, onReject, onNotify)`
-Returns a new promise chained from this promise. The new promise will be rejected or resolved defer on the passed `onFulfill`, `onReject`, `onNotify` and the state of this promise.
+#### `.then(onFulfilled, onRejected)`
+Returns a new promise chained from this promise. The new promise will be rejected or resolved defer on the passed `onFulfill`, `onReject` and the state of this promise.
 
 #### `.catch(handler)`
 This is a catch-all exception handler, shortcut for calling `.then(null, handler)` on this promise. Any exception happening in a `.then`-chain will propagate to nearest `.catch` handler.
@@ -27,7 +27,7 @@ Like `.catch`, but any unhandled rejection that ends up here will be thrown as a
 #### `.finally(handler)`
 Pass a handler that will be called regardless of this promise's fate. Returns a new promise chained from this promise.
 
-#### `.spread(onFulfill, onReject)`
+#### `.spread(onFulfilled, onRejected)`
 Like calling .then, but the fulfillment value or rejection reason is assumed to be an array, which is flattened to the formal parameters of the handlers.
 
 #### `Davy.resolve(value)`
@@ -47,3 +47,6 @@ Returns a promise that either resolves when the first promise in the `iterable` 
 
 #### `Davy.wrap(nodeFunction)`
 Returns a function that will wrap the given `nodeFunction`. Instead of taking a callback, the returned function will return a promise whose fate is decided by the callback behavior of the given node function. The node function should conform to node.js convention of accepting a callback as last argument and calling that callback with error as the first argument and success value on the second argument.
+
+#### `Davy.traverse(promiseTree, treePath)`
+Returns a promise that will be fullfiled with the result of the tree and subtrees resolved values.
