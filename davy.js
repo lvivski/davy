@@ -17,41 +17,46 @@
     this.value = undefined;
     this.__deferreds__ = [];
     if (arguments.length > 0) {
-      var resolver = new Resolver(this);
-      if (typeof fn == "function") {
-        Resolver.resolve(fn, resolver);
+      if (isFunction(fn)) {
+        Resolver.resolve(this, fn);
       } else {
-        resolver.fulfill(fn);
+        throw new TypeError("Promise constructor's argument is not a function");
       }
     }
   }
   Promise.prototype.isFulfilled = false;
   Promise.prototype.isRejected = false;
-  Promise.prototype.then = function(onFulfill, onReject, onNotify) {
-    var resolver = Promise.defer(), deferred = {
-      resolver: resolver,
-      fulfill: onFulfill,
-      reject: onReject,
-      notify: onNotify
-    };
-    if (this.isFulfilled || this.isRejected || this.value) {
-      Resolver.handle(this, [ deferred ]);
-    } else if (!this.value) {
+  Promise.prototype.then = function(onFulfilled, onRejected) {
+    var promise = new Promise(), deferred = new Deferred(promise, onFulfilled, onRejected);
+    if (this.isFulfilled || this.isRejected) {
+      Resolver.handle(this, deferred);
+    } else {
       this.__deferreds__.push(deferred);
     }
-    return resolver.promise;
+    return promise;
   };
+  function Deferred(promise, onFulfilled, onRejected) {
+    return {
+      fulfill: onFulfilled,
+      reject: onRejected,
+      promise: promise
+    };
+  }
   function Resolver(promise) {
     this.promise = promise;
   }
+  Resolver.prototype.fulfill = function(value) {
+    Resolver.fulfill(this.promise, value);
+  };
+  Resolver.prototype.reject = function(error) {
+    Resolver.reject(this.promise, error);
+  };
   Resolver.SUCCESS = "fulfill";
   Resolver.FAILURE = "reject";
-  Resolver.NOTIFY = "notify";
-  Resolver.prototype.fulfill = function(value) {
-    var promise = this.promise;
+  Resolver.fulfill = function(promise, value) {
     if (promise.isFulfilled || promise.isRejected) return;
     if (value === promise) {
-      this.reject(new TypeError("Can't resolve a promise with itself."));
+      Resolver.reject(promise, new TypeError("Can't resolve a promise with itself."));
       return;
     }
     if (isObject(value) || isFunction(value)) {
@@ -59,83 +64,67 @@
       try {
         then = value.then;
       } catch (e) {
-        this.reject(e);
+        Resolver.reject(promise, e);
         return;
       }
       if (isFunction(then)) {
-        Resolver.resolve(then.bind(value), this);
+        Resolver.resolve(promise, then.bind(value));
         return;
       }
     }
     promise.isFulfilled = true;
     Resolver.complete(promise, value);
   };
-  Resolver.prototype.reject = function(error) {
-    var promise = this.promise;
+  Resolver.reject = function(promise, error) {
     if (promise.isFulfilled || promise.isRejected) return;
     promise.isRejected = true;
     Resolver.complete(promise, error);
   };
-  Resolver.prototype.notify = function(value) {
-    var promise = this.promise;
-    if (promise.isFulfilled || promise.isRejected) return;
-    Resolver.complete(promise, value);
-  };
   Resolver.complete = function(promise, value) {
     promise.value = value;
-    Resolver.handle(promise, promise.__deferreds__);
-    if (promise.isFulfilled || promise.isRejected) {
-      promise.__deferreds__ = undefined;
-    }
-  };
-  Resolver.handle = function(promise, deferreds) {
+    var deferreds = promise.__deferreds__;
     if (!deferreds.length) return;
-    var type = promise.isFulfilled ? Resolver.SUCCESS : promise.isRejected ? Resolver.FAILURE : Resolver.NOTIFY, value = promise.value;
     var i = 0;
     while (i < deferreds.length) {
-      Resolver.handleOne(deferreds[i++], type, value);
+      Resolver.handle(promise, deferreds[i++]);
     }
+    promise.__deferreds__ = undefined;
   };
-  Resolver.handleOne = function(deferred, type, value) {
-    var fn = deferred[type], resolver = deferred.resolver;
+  Resolver.handle = function(promise, deferred) {
+    var type = promise.isFulfilled ? Resolver.SUCCESS : Resolver.FAILURE, fn = deferred[type], value = promise.value;
+    promise = deferred.promise;
     nextTick(function() {
       if (isFunction(fn)) {
         var val;
         try {
           val = fn(value);
         } catch (e) {
-          resolver.reject(e);
+          Resolver.reject(promise, e);
           return;
         }
-        if (type === Resolver.NOTIFY) {
-          resolver.notify(val);
-        } else {
-          resolver.fulfill(val);
-        }
+        Resolver.fulfill(promise, val);
       } else {
-        resolver[type](value);
+        Resolver[type](promise, value);
       }
     });
   };
-  Resolver.resolve = function(fn, resolver) {
+  Resolver.resolve = function(promise, fn) {
     var isPending = true;
     try {
       fn(function(val) {
         if (isPending) {
           isPending = false;
-          resolver.fulfill(val);
+          Resolver.fulfill(promise, val);
         }
       }, function(err) {
         if (isPending) {
           isPending = false;
-          resolver.reject(err);
+          Resolver.reject(promise, err);
         }
-      }, function(val) {
-        resolver.notify(val);
       });
     } catch (e) {
       if (isPending) {
-        resolver.reject(e);
+        Resolver.reject(promise, e);
       }
     }
   };
@@ -225,18 +214,19 @@
     }
   };
   Promise.wrap = function(fn) {
+    var resolver = Promise.defer();
+    function callback(err, val) {
+      if (err) {
+        resolver.reject(err);
+      } else {
+        resolver.fulfill(val);
+      }
+    }
     return function() {
-      var len = arguments.length, i = 0, args = new Array(len), resolver = Promise.defer();
+      var len = arguments.length, args = new Array(len), i = 0;
       while (i < len) {
         args[i] = arguments[i++];
       }
-      var callback = function(err, val) {
-        if (err) {
-          resolver.reject(err);
-        } else {
-          resolver.fulfill(val);
-        }
-      };
       try {
         switch (len) {
          case 2:

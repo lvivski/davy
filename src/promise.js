@@ -1,12 +1,12 @@
 function Promise(fn) {
 	this.value = undefined
 	this.__deferreds__ = []
+
 	if (arguments.length > 0) {
-		var resolver = new Resolver(this)
-		if (typeof fn == 'function') {
-			Resolver.resolve(fn, resolver)
+		if (isFunction(fn)) {
+			Resolver.resolve(this, fn)
 		} else {
-			resolver.fulfill(fn)
+			throw new TypeError('Promise constructor\'s argument is not a function')
 		}
 	}
 }
@@ -14,19 +14,23 @@ function Promise(fn) {
 Promise.prototype.isFulfilled = false
 Promise.prototype.isRejected = false
 
-Promise.prototype.then = function (onFulfill, onReject, onNotify) {
-	var resolver = Promise.defer(),
-		deferred = {
-			resolver: resolver,
-			fulfill: onFulfill,
-			reject: onReject,
-			notify: onNotify
-		}
+Promise.prototype.then = function (onFulfilled, onRejected) {
+	var promise = new Promise(),
+		deferred = new Deferred(promise, onFulfilled, onRejected)
 
-	if (this.isFulfilled || this.isRejected || this.value) {
-		Resolver.handle(this, [deferred])
-	} else if (!this.value) {
+	if (this.isFulfilled || this.isRejected) {
+		Resolver.handle(this, deferred)
+	} else {
 		this.__deferreds__.push(deferred)
 	}
-	return resolver.promise
+
+	return promise
+}
+
+function Deferred(promise, onFulfilled, onRejected) {
+	return {
+		fulfill: onFulfilled,
+		reject: onRejected,
+		promise: promise
+	}
 }
