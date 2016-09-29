@@ -112,22 +112,21 @@ Promise.race = function () {
 }
 
 Promise.wrap = function (fn) {
+	var resolver = Promise.defer()
+	function callback(err, val) {
+		if (err) {
+			resolver.reject(err)
+		} else {
+			resolver.fulfill(val)
+		}
+	}
 	return function () {
 		var len = arguments.length,
-			i = 0,
 			args = new Array(len),
-			resolver = Promise.defer()
+			i = 0
 
 		while (i < len) {
 			args[i] = arguments[i++]
-		}
-
-		var callback = function (err, val) {
-			if (err) {
-				resolver.reject(err)
-			} else {
-				resolver.fulfill(val)
-			}
 		}
 
 		try {
